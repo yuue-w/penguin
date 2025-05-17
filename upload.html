@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>咖啡识别 - 上传图片</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            background: #fff;
+            min-height: 100vh;
+            width: 100%;
+            margin: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .upload-area {
+            /* background: rgba(255,255,255,0.9);  // 删除或注释掉 */
+            /* backdrop-filter: blur(10px);        // 删除或注释掉 */
+            border: none; /* 保证没有边框 */
+            background: transparent; /* 明确设为透明 */
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #9ca3af;
+            transform: scale(1.02);
+        }
+        @media (min-width: 768px) {
+            body {
+                max-width: 750px;
+                margin: 0 auto;
+            }
+        }
+        #fileInput {
+            display: none;
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 1rem;
+        }
+        #startButton:hover {
+            background: #222 !important;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 sm:p-8">
+    <div class="w-full max-w-2xl mx-auto text-center">
+        <img src="penguin-coffee.png" alt="咖啡企鹅" class="mx-auto mb-4 w-64 h-64 object-contain" style="user-select:none;">
+        <div class="mb-2">
+            <div style="font-family: 'MeituanType Bold', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif; font-weight: bold; font-size: 2rem; color: #222;">企鹅吨吨</div>
+            <div style="font-family: 'MeituanType Bold', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif; font-weight: bold; font-size: 1.1rem; color: #666; margin-top: 0.5rem;">帮你生成手冲咖啡咒语</div>
+        </div>
+        
+        <input type="file" id="fileInput" accept="image/*" capture="environment">
+        
+        <div class="relative flex items-center justify-center" style="width:100%; max-width:600px; aspect-ratio: 1.4/1; margin:0 auto;">
+            <img src="handdrawn-frame2.png" alt="手绘外框" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-full max-h-[80vh] object-contain pointer-events-none select-none z-0" style="user-select:none;">
+            <div class="upload-area rounded-3xl p-4 sm:p-8 mb-6 sm:mb-8 cursor-pointer relative z-10 bg-transparent border-none flex flex-col items-center justify-center w-full h-full" onclick="document.getElementById('fileInput').click()">
+                <div id="previewContainer" class="hidden absolute inset-0 flex items-center justify-center w-full h-full z-20" style="background:transparent;">
+                    <img id="imagePreview" class="preview-image" src="" alt="预览图" style="max-width:60%; max-height:60%; object-fit:contain; box-shadow:none; border-radius:1rem;">
+                </div>
+                <div id="uploadIcon" class="mb-4">
+                    <img src="upload-image-icon.png" alt="上传图片图标" style="width:56px;height:56px;display:inline-block;">
+                </div>
+                <p id="upload-tip" class="text-black/80 mb-4" style="font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, 'Hiragino Sans GB', sans-serif; font-weight: 500;">上传咖啡包装图</p>
+                <p id="upload-desc" class="text-sm" style="font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, 'Hiragino Sans GB', sans-serif; font-weight: 400; color: rgba(0,0,0,0.65);">识别并生成最佳手冲方案</p>
+            </div>
+        </div>
+
+        <button id="startButton" class="text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg transition-all duration-300 opacity-50 cursor-not-allowed w-full max-w-[320px] mx-auto block mt-4" style="background:#000000;" disabled>
+            开始识别
+        </button>
+    </div>
+
+    <script>
+        const API_URL = 'https://aigc.sankuai.com/v1/openai/native/chat/completions';
+        const API_KEY = '21898581634560299029';  // 需要替换为实际的AppId
+        
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewContainer = document.getElementById('previewContainer');
+        const uploadIcon = document.getElementById('uploadIcon');
+        const startButton = document.getElementById('startButton');
+
+        async function convertImageToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function analyzeCoffee(imageDataUrl) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'omit',
+                    body: JSON.stringify({
+                        model: "gpt-4o-2024-05-13",
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    {
+                                        type: "text",
+                                        text: "请分析这张咖啡包装图片，识别出咖啡的品种、产地和处理方式。请用JSON格式返回，格式为：{\"variety\":\"品种\",\"origin\":\"产地\",\"process\":\"处理方式\",\"roastLevel\":\"烘焙度\"}"
+                                    },
+                                    {
+                                        type: "image_url",
+                                        image_url: {
+                                            url: imageDataUrl
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API响应错误:', response.status, errorText);
+                    throw new Error(`API请求失败: ${response.status} - ${errorText}`);
+                }
+
+                const data = await response.json();
+                console.log('API返回数据:', data);
+
+                if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+                    throw new Error('API返回数据格式错误');
+                }
+
+                try {
+                    const content = data.choices[0].message.content;
+                    console.log('解析前的content:', content);
+                    
+                    // 移除可能存在的 markdown 标记
+                    let cleanContent = content;
+                    if (content.includes('```')) {
+                        cleanContent = content.replace(/```json\n|\n```/g, '');
+                    }
+                    console.log('清理后的content:', cleanContent);
+                    
+                    // 解析JSON字符串
+                    const resultData = JSON.parse(cleanContent);
+                    console.log('解析后的resultData:', resultData);
+
+                    // 验证数据格式
+                    if (!resultData.variety || !resultData.origin || !resultData.process || !resultData.roastLevel) {
+                        console.error('数据格式验证失败:', resultData);
+                        throw new Error('返回数据缺少必要字段');
+                    }
+
+                    localStorage.setItem('coffeeAnalysis', JSON.stringify(resultData));
+                    window.location.href = 'analyze.html';
+                } catch (parseError) {
+                    console.error('解析返回数据失败:', parseError);
+                    console.error('API返回的原始数据:', data);
+                    throw new Error('无法解析识别结果');
+                }
+            } catch (error) {
+                console.error('识别失败:', error);
+                alert('图片识别失败: ' + error.message);
+                startButton.disabled = false;
+                startButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                startButton.textContent = '开始识别';
+            }
+        }
+
+        fileInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('请选择图片文件');
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('图片大小不能超过5MB');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    uploadIcon.classList.add('hidden');
+                    document.getElementById('upload-tip').style.display = 'none';
+                    document.getElementById('upload-desc').style.display = 'none';
+                    startButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    startButton.removeAttribute('disabled');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        startButton.addEventListener('click', async function() {
+            if (fileInput.files.length > 0) {
+                // 立即跳转到分析页面
+                window.location.href = 'analyze.html';
+                // 如需保留API调用，可将以下代码注释掉或删除
+                /*
+                try {
+                    startButton.disabled = true;
+                    startButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    startButton.textContent = '识别中...';
+                    const imageDataUrl = await convertImageToBase64(fileInput.files[0]);
+                    await analyzeCoffee(imageDataUrl);
+                } catch (error) {
+                    console.error('处理失败:', error);
+                    alert('图片处理失败，请重试');
+                    startButton.disabled = false;
+                    startButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    startButton.textContent = '开始识别';
+                }
+                */
+            }
+        });
+
+        // 添加拖放功能
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#9ca3af';
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#d1d5db';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#d1d5db';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                fileInput.files = e.dataTransfer.files;
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        });
+    </script>
+</body>
+</html> 

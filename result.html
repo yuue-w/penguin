@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咖啡冲煮方案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --primary-gradient: linear-gradient(135deg, #8A6552 0%, #4A3427 100%);
+            --card-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            --accent-color: #8A6552;
+        }
+
+        * {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F5F5F5 0%, #E8E8E8 100%);
+            min-height: 100vh;
+            color: #2C1810;
+        }
+
+        .page-container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .card {
+            background: var(--card-gradient);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+        }
+
+        .title-gradient {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .parameter-item {
+            background: rgba(138, 101, 82, 0.08);
+            border-radius: 1rem;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .parameter-item:hover {
+            background: rgba(138, 101, 82, 0.12);
+            transform: scale(1.02);
+        }
+
+        .step-number {
+            background: var(--primary-gradient);
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(74, 52, 39, 0.2);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(74, 52, 39, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 52, 39, 0.3);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .equipment-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .equipment-item:hover {
+            transform: translateX(8px);
+            color: var(--accent-color);
+        }
+
+        .adjustment-card {
+            background: rgba(138, 101, 82, 0.05);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(138, 101, 82, 0.1);
+        }
+
+        .adjustment-card:hover {
+            background: rgba(138, 101, 82, 0.08);
+            border-color: rgba(138, 101, 82, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="mb-12 text-center fade-in">
+            <h1 class="text-4xl sm:text-5xl font-light mb-6 title-gradient">专属冲煮方案</h1>
+            <p class="text-lg sm:text-xl text-gray-600" id="coffeeInfo"></p>
+        </div>
+
+        <!-- 冲煮核心目标 -->
+        <div class="card p-8 mb-8 fade-in">
+            <h2 class="text-2xl font-medium mb-6 flex items-center gap-3">
+                <i class="ri-target-line text-[var(--accent-color)]"></i>冲煮核心目标
+            </h2>
+            <p class="text-gray-700 text-lg leading-relaxed" id="brewingGoal"></p>
+        </div>
+
+        <!-- 参数总表 -->
+        <div class="card p-8 mb-8 fade-in">
+            <h2 class="text-2xl font-medium mb-6 flex items-center gap-3">
+                <i class="ri-settings-3-line text-[var(--accent-color)]"></i>参数总表
+            </h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-6" id="parameters"></div>
+        </div>
+
+        <!-- 冲煮器具 -->
+        <div class="card p-8 mb-8 fade-in">
+            <h2 class="text-2xl font-medium mb-6 flex items-center gap-3">
+                <i class="ri-cup-line text-[var(--accent-color)]"></i>推荐器具
+            </h2>
+            <ul class="space-y-2" id="equipment"></ul>
+        </div>
+
+        <!-- 六步冲煮流程 -->
+        <div class="card p-8 mb-8 fade-in">
+            <h2 class="text-2xl font-medium mb-6 flex items-center gap-3">
+                <i class="ri-number-s-line text-[var(--accent-color)]"></i>六步冲煮流程
+            </h2>
+            <div class="space-y-8" id="brewingSteps"></div>
+        </div>
+
+        <!-- 变量调控锦囊 -->
+        <div class="card p-8 mb-12 fade-in">
+            <h2 class="text-2xl font-medium mb-6 flex items-center gap-3">
+                <i class="ri-flask-line text-[var(--accent-color)]"></i>变量调控锦囊
+            </h2>
+            <div class="space-y-4" id="adjustmentTips"></div>
+        </div>
+
+        <div class="text-center fade-in">
+            <a href="upload.html" class="btn-primary inline-flex items-center gap-2">
+                <i class="ri-arrow-left-line"></i>
+                返回首页
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 从localStorage获取咖啡分析结果
+        const coffeeData = JSON.parse(localStorage.getItem('coffeeAnalysis'));
+        
+        // 更新咖啡信息
+        document.getElementById('coffeeInfo').textContent = 
+            `${coffeeData.origin} ${coffeeData.variety} · ${coffeeData.process} · ${coffeeData.roastLevel}`;
+
+        // 调用API获取冲煮方案
+        async function getBrewingPlan() {
+            try {
+                const response = await fetch('http://localhost:8001/api/brewing', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4o-2024-05-13",
+                        messages: [
+                            {
+                                role: "user",
+                                content: `请为这款咖啡生成一个详细的冲煮方案，咖啡信息如下：
+                                产地：${coffeeData.origin}
+                                品种：${coffeeData.variety}
+                                处理法：${coffeeData.process}
+                                烘焙度：${coffeeData.roastLevel}
+                                
+                                请按以下格式返回JSON：
+                                {
+                                    "brewingGoal": "冲煮核心目标描述",
+                                    "parameters": {
+                                        "研磨度": "具体数值",
+                                        "粉水比": "具体数值",
+                                        "水温": "具体数值",
+                                        "总时间": "具体数值",
+                                        "TDS目标": "具体数值",
+                                        "萃取率目标": "具体数值"
+                                    },
+                                    "equipment": ["器具1", "器具2", "器具3"],
+                                    "brewingSteps": [
+                                        {"title": "步骤1标题", "content": "步骤1详细描述"},
+                                        {"title": "步骤2标题", "content": "步骤2详细描述"},
+                                        // ... 共6个步骤
+                                    ],
+                                    "adjustmentTips": [
+                                        {"aspect": "调整维度1", "tip": "调整建议1"},
+                                        {"aspect": "调整维度2", "tip": "调整建议2"},
+                                        // ... 多个调整建议
+                                    ]
+                                }`
+                            }
+                        ]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API请求失败');
+                }
+
+                const data = await response.json();
+                const content = data.choices[0].message.content;
+                const plan = JSON.parse(content);
+
+                // 更新冲煮目标
+                document.getElementById('brewingGoal').textContent = plan.brewingGoal;
+
+                // 更新参数总表
+                const parametersDiv = document.getElementById('parameters');
+                Object.entries(plan.parameters).forEach(([key, value]) => {
+                    parametersDiv.innerHTML += `
+                        <div class="parameter-item">
+                            <div class="text-sm text-gray-600 mb-1">${key}</div>
+                            <div class="text-lg font-medium">${value}</div>
+                        </div>
+                    `;
+                });
+
+                // 更新推荐器具
+                const equipmentUl = document.getElementById('equipment');
+                plan.equipment.forEach(item => {
+                    equipmentUl.innerHTML += `
+                        <li class="equipment-item">
+                            <i class="ri-checkbox-circle-line text-[var(--accent-color)]"></i>
+                            <span>${item}</span>
+                        </li>
+                    `;
+                });
+
+                // 更新冲煮步骤
+                const stepsDiv = document.getElementById('brewingSteps');
+                plan.brewingSteps.forEach((step, index) => {
+                    stepsDiv.innerHTML += `
+                        <div class="flex gap-6">
+                            <div class="step-number flex-shrink-0">${index + 1}</div>
+                            <div>
+                                <h3 class="text-xl font-medium mb-3">${step.title}</h3>
+                                <p class="text-gray-700 leading-relaxed">${step.content}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // 更新调整建议
+                const tipsDiv = document.getElementById('adjustmentTips');
+                plan.adjustmentTips.forEach(tip => {
+                    tipsDiv.innerHTML += `
+                        <div class="adjustment-card">
+                            <h3 class="text-lg font-medium mb-2 flex items-center gap-2">
+                                <i class="ri-focus-3-line text-[var(--accent-color)]"></i>
+                                ${tip.aspect}
+                            </h3>
+                            <p class="text-gray-700">${tip.tip}</p>
+                        </div>
+                    `;
+                });
+
+                // 调试：打印完整plan对象到控制台
+                console.log('完整API返回内容:', plan);
+
+            } catch (error) {
+                console.error('获取冲煮方案失败:', error);
+                alert('获取冲煮方案失败，请重试');
+            }
+        }
+
+        // 页面加载时获取冲煮方案
+        getBrewingPlan();
+    </script>
+</body>
+</html> 

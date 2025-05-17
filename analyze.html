@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>咖啡识别 - 分析中</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            background: #fff;
+            min-height: 100vh;
+            width: 100%;
+            margin: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @media (min-width: 768px) {
+            body {
+                max-width: 750px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 sm:p-8">
+    <!-- 顶部企鹅动态图 -->
+    <div class="w-full flex flex-col items-center justify-center mt-12 mb-8">
+        <img id="loadingPenguin" src="penguin1.png" alt="加载中" style="width:180px; height:auto; user-select:none; object-fit:contain;">
+        <div class="mt-4 text-2xl font-bold text-gray-800">分析中，请稍候...</div>
+    </div>
+    <div class="space-y-3 sm:space-y-4">
+        <div id="step1" class="flex items-center justify-center space-x-2">
+            <i class="ri-loader-4-line animate-spin text-black"></i>
+            <span class="text-sm sm:text-base text-black">图像预处理</span>
+        </div>
+        <div id="step2" class="flex items-center justify-center space-x-2 opacity-50">
+            <i class="ri-loader-4-line text-black"></i>
+            <span class="text-sm sm:text-base text-black">正在识别咖啡品种</span>
+        </div>
+        <div id="step3" class="flex items-center justify-center space-x-2 opacity-50">
+            <i class="ri-loader-4-line text-black"></i>
+            <span class="text-sm sm:text-base text-black">分析产地信息</span>
+        </div>
+        <div id="step4" class="flex items-center justify-center space-x-2 opacity-50">
+            <i class="ri-loader-4-line text-black"></i>
+            <span class="text-sm sm:text-base text-black">确定处理方式</span>
+        </div>
+    </div>
+
+    <script>
+        const penguinImgs = ["penguin1.png", "penguin2.png"];
+        let penguinIdx = 0;
+        setInterval(() => {
+            penguinIdx = 1 - penguinIdx;
+            document.getElementById('loadingPenguin').src = penguinImgs[penguinIdx];
+        }, 500);
+
+        // 恢复分析步骤动画
+        const steps = [
+            { id: 'step1', time: 1000 },
+            { id: 'step2', time: 2000 },
+            { id: 'step3', time: 1500 },
+            { id: 'step4', time: 1500 }
+        ];
+        let currentStep = 0;
+        function animateSteps() {
+            if (currentStep >= steps.length) return;
+            const step = steps[currentStep];
+            const stepElement = document.getElementById(step.id);
+            // 激活当前步骤
+            stepElement.classList.remove('opacity-50');
+            stepElement.querySelector('i').classList.add('animate-spin');
+            // 完成上一步骤
+            if (currentStep > 0) {
+                const prevStep = document.getElementById(steps[currentStep - 1].id);
+                prevStep.querySelector('i').classList.remove('animate-spin');
+                prevStep.querySelector('i').classList.remove('ri-loader-4-line');
+                prevStep.querySelector('i').classList.add('ri-check-line');
+            }
+            setTimeout(() => {
+                currentStep++;
+                animateSteps();
+            }, step.time);
+        }
+        animateSteps();
+    </script>
+</body>
+</html> 
