@@ -80,7 +80,11 @@
         ];
         let currentStep = 0;
         function animateSteps() {
-            if (currentStep >= steps.length) return;
+            if (currentStep >= steps.length) {
+                // 动画全部完成后跳转到结果页
+                window.location.href = 'result.html';
+                return;
+            }
             const step = steps[currentStep];
             const stepElement = document.getElementById(step.id);
             // 激活当前步骤
